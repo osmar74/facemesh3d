@@ -1,11 +1,432 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>FaceMesh3D</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceMesh3D — Triangulacion Delaunay/Voronoi</title>
+<link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <h1>FaceMesh3D — servidor activo</h1>
-    <p>Frontend en construccion. API disponible en <a href="/docs">/docs</a></p>
+
+<!-- ══════════════════════════════════════════════
+     PANEL IZQUIERDO — CONTROLES
+════════════════════════════════════════════════ -->
+<aside id="sidebar">
+
+    <h1>FACEMESH 3D</h1>
+
+    <!-- Captura -->
+    <div>
+        <div class="section-title">Entrada</div>
+        <input type="file" id="file-input" accept="image/*">
+        <button class="btn primary" onclick="document.getElementById('file-input').click()">
+            + Subir imagen
+        </button>
+        <button class="btn" style="margin-top:4px" onclick="App.captureWebcam()">
+            Webcam
+        </button>
+    </div>
+
+    <!-- Rotacion -->
+    <div>
+        <div class="section-title">Rotacion 3D</div>
+        <div class="slider-row">
+            <label>Alpha</label>
+            <input type="range" id="sl-alpha" min="-180" max="180" value="0" step="1"
+                   oninput="App.onSliderRotate()">
+            <span id="lbl-alpha">0°</span>
+        </div>
+        <div class="slider-row">
+            <label>Beta</label>
+            <input type="range" id="sl-beta" min="-90" max="90" value="0" step="1"
+                   oninput="App.onSliderRotate()">
+            <span id="lbl-beta">0°</span>
+        </div>
+        <div class="slider-row">
+            <label>Zoom</label>
+            <input type="range" id="sl-zoom" min="20" max="500" value="100" step="5"
+                   oninput="App.onSliderRotate()">
+            <span id="lbl-zoom">1.0x</span>
+        </div>
+        <button class="btn" style="margin-top:4px" onclick="App.resetRotation()">
+            Reset rotacion
+        </button>
+    </div>
+
+    <!-- Proyeccion -->
+    <div>
+        <div class="section-title">Proyeccion</div>
+        <div class="slider-row">
+            <label>Focal D</label>
+            <input type="range" id="sl-D" min="100" max="1500" value="500" step="10"
+                   oninput="App.onFocalChange()">
+            <span id="lbl-D">500</span>
+        </div>
+    </div>
+
+    <!-- Visualizacion -->
+    <div>
+        <div class="section-title">Visualizacion</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer">
+            <input type="checkbox" id="chk-voronoi" onchange="App.renderAll()">
+            Mostrar Voronoi
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;margin-top:4px">
+            <input type="checkbox" id="chk-points" checked onchange="App.renderAll()">
+            Mostrar puntos
+        </label>
+    </div>
+
+    <!-- Stats -->
+    <div>
+        <div class="section-title">Estadisticas</div>
+        <div class="stat-row"><span>Landmarks</span><span id="stat-lm">—</span></div>
+        <div class="stat-row"><span>Triangulos</span><span id="stat-tri">—</span></div>
+        <div class="stat-row"><span>Voronoi reg.</span><span id="stat-vor">—</span></div>
+        <div class="stat-row"><span>WebSocket</span><span id="stat-ws">—</span></div>
+    </div>
+
+    <!-- Sesiones -->
+    <div>
+        <div class="section-title">Sesiones</div>
+        <button class="btn" onclick="App.saveSession()">Guardar sesion</button>
+        <button class="btn" style="margin-top:4px" onclick="App.loadSessionList()">
+            Recargar lista
+        </button>
+        <div id="sessions-list" style="margin-top:6px"></div>
+    </div>
+
+    <!-- Status -->
+    <div>
+        <div class="section-title">Estado</div>
+        <div id="status">Esperando imagen...</div>
+    </div>
+
+</aside>
+
+<!-- ══════════════════════════════════════════════
+     PANELES DERECHOS — 4 CANVAS
+════════════════════════════════════════════════ -->
+<main id="main">
+
+    <!-- Panel 1: Imagen real -->
+    <div class="panel" id="panel-foto">
+        <div class="panel-header">
+            01 — Imagen real
+            <span class="badge" id="badge-foto">—</span>
+        </div>
+        <canvas id="canvas-foto"></canvas>
+        <div class="panel-placeholder" id="ph-foto">Sube una imagen</div>
+    </div>
+
+    <!-- Panel 2: Landmarks -->
+    <div class="panel" id="panel-pts">
+        <div class="panel-header">
+            02 — Landmarks detectados
+            <span class="badge" id="badge-pts">—</span>
+        </div>
+        <canvas id="canvas-pts"></canvas>
+        <div class="panel-placeholder" id="ph-pts">Sin datos</div>
+    </div>
+
+    <!-- Panel 3: Triangulacion -->
+    <div class="panel" id="panel-tri">
+        <div class="panel-header">
+            03 — Triangulacion Delaunay
+            <span class="badge" id="badge-tri">—</span>
+        </div>
+        <canvas id="canvas-tri"></canvas>
+        <div class="panel-placeholder" id="ph-tri">Sin datos</div>
+    </div>
+
+    <!-- Panel 4: Rotacion 3D -->
+    <div class="panel" id="panel-rotate">
+        <div class="panel-header">
+            04 — Proyeccion 3D interactiva
+            <span class="badge" id="badge-rot">—</span>
+        </div>
+        <canvas id="canvas-rot"></canvas>
+        <div class="panel-placeholder" id="ph-rot">Sin datos</div>
+    </div>
+
+</main>
+
+<script src="/static/js/renderer.js"></script>
+<script src="/static/js/orbitControls.js"></script>
+<script src="/static/js/wsClient.js"></script>
+<script>
+// ══════════════════════════════════════════════
+// APP — Logica principal
+// ══════════════════════════════════════════════
+const App = (() => {
+
+    // Estado global
+    let _state = {
+        landmarks:  [],
+        imgW: 640, imgH: 480,
+        points2d:   [],
+        simplices:  [],
+        projected:  [],
+        imageB64:   ''
+    };
+
+    // Referencias DOM
+    const cFoto = document.getElementById('canvas-foto');
+    const cPts  = document.getElementById('canvas-pts');
+    const cTri  = document.getElementById('canvas-tri');
+    const cRot  = document.getElementById('canvas-rot');
+
+    // ── Inicializacion ──────────────────────────────────────────
+
+    function init() {
+        // Orbit controls en canvas de rotacion
+        OrbitControls.init(cRot, (st) => {
+            syncSliders(st);
+            WsClient.send(st);
+        });
+
+        // WebSocket
+        WsClient.connect(onWsData, onWsStatus);
+
+        // Input de archivo
+        document.getElementById('file-input')
+            .addEventListener('change', onFileSelected);
+
+        // Resize
+        window.addEventListener('resize', () => renderAll());
+
+        setStatus('Servidor conectado. Sube una imagen.', 'ok');
+        loadSessionList();
+    }
+
+    // ── Entrada de datos ────────────────────────────────────────
+
+    async function onFileSelected(evt) {
+        const file = evt.target.files[0];
+        if (!file) return;
+        evt.target.value = '';
+        setStatus('Procesando imagen...', 'busy');
+        hidePlaceholders();
+
+        try {
+            const data = await WsClient.uploadImage(file);
+            applyData(data);
+            setStatus(`OK — ${data.message}`, 'ok');
+        } catch (e) {
+            setStatus('Error: ' + e.message, 'error');
+        }
+    }
+
+    async function captureWebcam() {
+        setStatus('Capturando webcam...', 'busy');
+        hidePlaceholders();
+        try {
+            const resp = await fetch('/webcam', { method: 'POST' });
+            const data = await resp.json();
+            if (!data.success) throw new Error(data.message);
+            applyData(data);
+            setStatus(`OK — ${data.message}`, 'ok');
+        } catch (e) {
+            setStatus('Error webcam: ' + e.message, 'error');
+        }
+    }
+
+    // ── Aplicar datos del servidor ───────────────────────────────
+
+    function applyData(data) {
+        if (!data.success) {
+            setStatus('Error: ' + data.message, 'error');
+            return;
+        }
+
+        _state.landmarks = data.landmarks || [];
+        _state.imgW      = data.image_width  || 640;
+        _state.imgH      = data.image_height || 480;
+        _state.imageB64  = data.image_b64 || '';
+
+        const geo = data.geometry || {};
+        _state.points2d  = geo.points_2d || [];
+        _state.simplices = (geo.delaunay || {}).simplices || [];
+
+        const proj = data.projection || {};
+        _state.projected = proj.projected || [];
+
+        updateStats(data);
+        renderAll();
+    }
+
+    // ── WebSocket ────────────────────────────────────────────────
+
+    function onWsData(data) {
+        if (!data.success) return;
+        const proj = data.projection || {};
+        _state.projected = proj.projected || [];
+
+        // Actualizar simplices si vienen
+        const geo = data.geometry || {};
+        if (geo.delaunay && geo.delaunay.simplices) {
+            _state.simplices = geo.delaunay.simplices;
+        }
+
+        Renderer.drawProjected(cRot, _state.projected, _state.simplices);
+    }
+
+    function onWsStatus(msg, ok) {
+        document.getElementById('stat-ws').textContent = ok ? 'OK' : 'OFF';
+        document.getElementById('stat-ws').style.color =
+            ok ? 'var(--green)' : '#ff4444';
+    }
+
+    // ── Sliders de rotacion ──────────────────────────────────────
+
+    function onSliderRotate() {
+        const alpha = degToRad(+document.getElementById('sl-alpha').value);
+        const beta  = degToRad(+document.getElementById('sl-beta').value);
+        const zoom  = +document.getElementById('sl-zoom').value / 100;
+
+        document.getElementById('lbl-alpha').textContent =
+            document.getElementById('sl-alpha').value + '°';
+        document.getElementById('lbl-beta').textContent =
+            document.getElementById('sl-beta').value + '°';
+        document.getElementById('lbl-zoom').textContent =
+            zoom.toFixed(1) + 'x';
+
+        OrbitControls.setState(alpha, beta, zoom);
+        WsClient.send({ alpha, beta, zoom, offset_x: 0, offset_y: 0 });
+    }
+
+    function onFocalChange() {
+        const D = +document.getElementById('sl-D').value;
+        document.getElementById('lbl-D').textContent = D;
+        // D se envia junto con la siguiente rotacion (no hay endpoint separado)
+        const st = OrbitControls.getState();
+        WsClient.send({ ...st, D });
+    }
+
+    function syncSliders(st) {
+        const aDeg = Math.round(radToDeg(st.alpha));
+        const bDeg = Math.round(radToDeg(st.beta));
+        document.getElementById('sl-alpha').value = aDeg;
+        document.getElementById('sl-beta').value  = bDeg;
+        document.getElementById('sl-zoom').value  = Math.round(st.zoom * 100);
+        document.getElementById('lbl-alpha').textContent = aDeg + '°';
+        document.getElementById('lbl-beta').textContent  = bDeg + '°';
+        document.getElementById('lbl-zoom').textContent  =
+            st.zoom.toFixed(1) + 'x';
+    }
+
+    function resetRotation() {
+        OrbitControls.reset();
+        document.getElementById('sl-alpha').value = 0;
+        document.getElementById('sl-beta').value  = 0;
+        document.getElementById('sl-zoom').value  = 100;
+        document.getElementById('lbl-alpha').textContent = '0°';
+        document.getElementById('lbl-beta').textContent  = '0°';
+        document.getElementById('lbl-zoom').textContent  = '1.0x';
+        WsClient.send({ alpha: 0, beta: 0, zoom: 1, offset_x: 0, offset_y: 0 });
+    }
+
+    // ── Renderizado ──────────────────────────────────────────────
+
+    function renderAll() {
+        Renderer.drawRealImage(cFoto, _state.imageB64);
+        Renderer.drawLandmarks(cPts, _state.landmarks,
+                               _state.imgW, _state.imgH);
+        Renderer.drawDelaunay(cTri, _state.points2d,
+                              _state.simplices, _state.imgW, _state.imgH);
+        Renderer.drawProjected(cRot, _state.projected, _state.simplices);
+    }
+
+    // ── Sesiones ─────────────────────────────────────────────────
+
+    async function saveSession() {
+        const name = prompt('Nombre de la sesion (vacio = automatico):');
+        if (name === null) return;
+        setStatus('Guardando sesion...', 'busy');
+        try {
+            const r = await WsClient.saveSesion(name || null);
+            setStatus(r.success ? 'Sesion guardada: ' + r.session_name
+                                : 'Error: ' + r.message,
+                      r.success ? 'ok' : 'error');
+            loadSessionList();
+        } catch (e) {
+            setStatus('Error: ' + e.message, 'error');
+        }
+    }
+
+    async function loadSessionList() {
+        try {
+            const r = await WsClient.listSesiones();
+            const el = document.getElementById('sessions-list');
+            el.innerHTML = '';
+            if (!r.sessions || r.sessions.length === 0) {
+                el.innerHTML = '<div style="padding:6px 8px;font-size:11px;color:var(--text3)">Sin sesiones</div>';
+                return;
+            }
+            r.sessions.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'session-item';
+                div.innerHTML = `<span>${s.name}</span><span>${s.size_kb}KB</span>`;
+                div.onclick = () => loadSession(s.name);
+                el.appendChild(div);
+            });
+        } catch (e) {
+            console.error('Error listando sesiones:', e);
+        }
+    }
+
+    async function loadSession(name) {
+        setStatus('Cargando sesion: ' + name + '...', 'busy');
+        hidePlaceholders();
+        try {
+            const data = await WsClient.loadSesion(name);
+            applyData(data);
+            setStatus('Sesion cargada: ' + name, 'ok');
+        } catch (e) {
+            setStatus('Error: ' + e.message, 'error');
+        }
+    }
+
+    // ── Utilidades ───────────────────────────────────────────────
+
+    function setStatus(msg, type) {
+        const el = document.getElementById('status');
+        el.textContent = msg;
+        el.className   = type || '';
+    }
+
+    function updateStats(data) {
+        const lm  = (data.landmarks || []).length;
+        const tri = ((data.geometry || {}).delaunay || {}).num_triangles || 0;
+        const vor = ((data.geometry || {}).voronoi  || {}).num_regions   || 0;
+        document.getElementById('stat-lm').textContent  = lm;
+        document.getElementById('stat-tri').textContent = tri;
+        document.getElementById('stat-vor').textContent = vor;
+        document.getElementById('badge-foto').textContent =
+            data.image_width + 'x' + data.image_height;
+        document.getElementById('badge-pts').textContent  = lm + ' pts';
+        document.getElementById('badge-tri').textContent  = tri + ' tri';
+        document.getElementById('badge-rot').textContent  = '3D';
+    }
+
+    function hidePlaceholders() {
+        ['ph-foto','ph-pts','ph-tri','ph-rot'].forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
+    }
+
+    function degToRad(d) { return d * Math.PI / 180; }
+    function radToDeg(r) { return r * 180 / Math.PI; }
+
+    // Iniciar
+    document.addEventListener('DOMContentLoaded', init);
+
+    return {
+        captureWebcam, onSliderRotate, onFocalChange,
+        resetRotation, saveSession, loadSessionList, renderAll
+    };
+
+})();
+</script>
 </body>
 </html>
