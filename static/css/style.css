@@ -137,7 +137,7 @@ body {
 .session-item:hover { background: var(--green3); color: var(--green); }
 
 
-/* ── AREA DE PANELES — 5 paneles ── */
+/* ── AREA DE PANELES — 6 paneles 3x2 ── */
 #main {
     flex: 1;
     display: grid;
@@ -156,10 +156,6 @@ body {
     overflow: hidden;
     position: relative;
 }
-
-/* Panel triangulacion ocupa 2 columnas en fila inferior */
-#panel-tri    { grid-column: 1 / 3; }
-#panel-rotate { grid-column: 3; }
 
 .panel-header {
     padding: 5px 10px;

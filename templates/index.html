@@ -15,10 +15,12 @@
     <div>
         <div class="section-title">Entrada</div>
         <input type="file" id="file-input" accept="image/*">
-        <button class="btn primary" onclick="document.getElementById('file-input').click()">
+        <button class="btn primary"
+                onclick="document.getElementById('file-input').click()">
             + Subir imagen
         </button>
-        <button class="btn" style="margin-top:4px" onclick="App.captureWebcam()">
+        <button class="btn" style="margin-top:4px"
+                onclick="App.captureWebcam()">
             Webcam
         </button>
     </div>
@@ -27,23 +29,24 @@
         <div class="section-title">Rotacion 3D</div>
         <div class="slider-row">
             <label>Alpha</label>
-            <input type="range" id="sl-alpha" min="-180" max="180" value="0" step="1"
-                   oninput="App.onSliderRotate()">
+            <input type="range" id="sl-alpha" min="-180" max="180"
+                   value="0" step="1" oninput="App.onSliderRotate()">
             <span id="lbl-alpha">0°</span>
         </div>
         <div class="slider-row">
             <label>Beta</label>
-            <input type="range" id="sl-beta" min="-90" max="90" value="0" step="1"
-                   oninput="App.onSliderRotate()">
+            <input type="range" id="sl-beta" min="-90" max="90"
+                   value="0" step="1" oninput="App.onSliderRotate()">
             <span id="lbl-beta">0°</span>
         </div>
         <div class="slider-row">
             <label>Zoom</label>
-            <input type="range" id="sl-zoom" min="20" max="500" value="100" step="5"
-                   oninput="App.onSliderRotate()">
+            <input type="range" id="sl-zoom" min="20" max="500"
+                   value="100" step="5" oninput="App.onSliderRotate()">
             <span id="lbl-zoom">1.0x</span>
         </div>
-        <button class="btn" style="margin-top:4px" onclick="App.resetRotation()">
+        <button class="btn" style="margin-top:4px"
+                onclick="App.resetRotation()">
             Reset rotacion
         </button>
     </div>
@@ -52,36 +55,52 @@
         <div class="section-title">Proyeccion focal</div>
         <div class="slider-row">
             <label>D</label>
-            <input type="range" id="sl-D" min="100" max="1500" value="500" step="10"
-                   oninput="App.onSliderRotate()">
+            <input type="range" id="sl-D" min="100" max="1500"
+                   value="500" step="10" oninput="App.onSliderRotate()">
             <span id="lbl-D">500</span>
         </div>
     </div>
 
     <div>
         <div class="section-title">Visualizacion</div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer">
-            <input type="checkbox" id="chk-voronoi" onchange="App.renderAll()">
+        <label style="display:flex;align-items:center;gap:6px;
+                      font-size:12px;color:var(--text2);cursor:pointer">
+            <input type="checkbox" id="chk-voronoi"
+                   onchange="App.renderAll()">
             Mostrar Voronoi
         </label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;margin-top:4px">
-            <input type="checkbox" id="chk-points" checked onchange="App.renderAll()">
+        <label style="display:flex;align-items:center;gap:6px;
+                      font-size:12px;color:var(--text2);cursor:pointer;
+                      margin-top:4px">
+            <input type="checkbox" id="chk-points" checked
+                   onchange="App.renderAll()">
             Mostrar puntos
         </label>
     </div>
 
     <div>
         <div class="section-title">Estadisticas</div>
-        <div class="stat-row"><span>Landmarks</span><span id="stat-lm">—</span></div>
-        <div class="stat-row"><span>Triangulos</span><span id="stat-tri">—</span></div>
-        <div class="stat-row"><span>Voronoi reg.</span><span id="stat-vor">—</span></div>
-        <div class="stat-row"><span>WebSocket</span><span id="stat-ws">—</span></div>
+        <div class="stat-row">
+            <span>Landmarks</span><span id="stat-lm">—</span>
+        </div>
+        <div class="stat-row">
+            <span>Triangulos</span><span id="stat-tri">—</span>
+        </div>
+        <div class="stat-row">
+            <span>Voronoi reg.</span><span id="stat-vor">—</span>
+        </div>
+        <div class="stat-row">
+            <span>WebSocket</span><span id="stat-ws">—</span>
+        </div>
     </div>
 
     <div>
         <div class="section-title">Sesiones</div>
-        <button class="btn" onclick="App.saveSession()">Guardar sesion</button>
-        <button class="btn" style="margin-top:4px" onclick="App.loadSessionList()">
+        <button class="btn" onclick="App.saveSession()">
+            Guardar sesion
+        </button>
+        <button class="btn" style="margin-top:4px"
+                onclick="App.loadSessionList()">
             Recargar lista
         </button>
         <div id="sessions-list" style="margin-top:6px"></div>
@@ -94,10 +113,14 @@
 
 </aside>
 
-<!-- 5 PANELES -->
+<!-- ══════════════════════════════════
+     6 PANELES — 3 columnas x 2 filas
+════════════════════════════════════ -->
 <main id="main">
 
-    <!-- Panel 1: imagen real -->
+    <!-- Fila 1 -->
+
+    <!-- 01: imagen real -->
     <div class="panel" id="panel-foto">
         <div class="panel-header">
             01 — Imagen real
@@ -107,17 +130,17 @@
         <div class="panel-placeholder" id="ph-foto">Sube una imagen</div>
     </div>
 
-    <!-- Panel 2a: foto + landmarks superpuestos -->
+    <!-- 02a: foto + landmarks -->
     <div class="panel" id="panel-foto-pts">
         <div class="panel-header">
-            02a — Foto con landmarks
+            02a — Foto + landmarks
             <span class="badge" id="badge-foto-pts">—</span>
         </div>
         <canvas id="canvas-foto-pts"></canvas>
         <div class="panel-placeholder" id="ph-foto-pts">Sin datos</div>
     </div>
 
-    <!-- Panel 2b: solo puntos -->
+    <!-- 02b: solo puntos -->
     <div class="panel" id="panel-pts">
         <div class="panel-header">
             02b — Solo landmarks
@@ -127,17 +150,29 @@
         <div class="panel-placeholder" id="ph-pts">Sin datos</div>
     </div>
 
-    <!-- Panel 3: triangulacion (span 2 columnas) -->
+    <!-- Fila 2 -->
+
+    <!-- 03a: foto + triangulacion -->
+    <div class="panel" id="panel-foto-tri">
+        <div class="panel-header">
+            03a — Foto + Delaunay
+            <span class="badge" id="badge-foto-tri">—</span>
+        </div>
+        <canvas id="canvas-foto-tri"></canvas>
+        <div class="panel-placeholder" id="ph-foto-tri">Sin datos</div>
+    </div>
+
+    <!-- 03b: solo triangulacion / Voronoi -->
     <div class="panel" id="panel-tri">
         <div class="panel-header">
-            03 — Triangulacion Delaunay / Voronoi
+            03b — Delaunay / Voronoi
             <span class="badge" id="badge-tri">—</span>
         </div>
         <canvas id="canvas-tri"></canvas>
         <div class="panel-placeholder" id="ph-tri">Sin datos</div>
     </div>
 
-    <!-- Panel 4: rotacion 3D -->
+    <!-- 04: rotacion 3D + ejes XYZ -->
     <div class="panel" id="panel-rotate">
         <div class="panel-header">
             04 — Proyeccion 3D interactiva
@@ -158,17 +193,22 @@ const App = (() => {
     let _state = {
         landmarks: [], imgW: 640, imgH: 480,
         points2d:  [], simplices: [], projected: [],
-        imageB64:  '', voronoi: null
+        imageB64:  '', voronoi: null,
+        alpha: 0, beta: 0, zoom: 1
     };
 
     const cFoto    = document.getElementById('canvas-foto');
     const cFotoPts = document.getElementById('canvas-foto-pts');
     const cPts     = document.getElementById('canvas-pts');
+    const cFotoTri = document.getElementById('canvas-foto-tri');
     const cTri     = document.getElementById('canvas-tri');
     const cRot     = document.getElementById('canvas-rot');
 
     function init() {
         OrbitControls.init(cRot, (st) => {
+            _state.alpha = st.alpha;
+            _state.beta  = st.beta;
+            _state.zoom  = st.zoom;
             syncSliders(st);
             const D = +document.getElementById('sl-D').value;
             WsClient.send({ ...st, D });
@@ -183,6 +223,8 @@ const App = (() => {
         setStatus('Servidor conectado. Sube una imagen.', 'ok');
         loadSessionList();
     }
+
+    // ── Entrada ─────────────────────────────────────────────────
 
     async function onFileSelected(evt) {
         const file = evt.target.files[0];
@@ -213,9 +255,13 @@ const App = (() => {
         }
     }
 
-    function applyData(data) {
-        if (!data.success) { setStatus('Error: ' + data.message, 'error'); return; }
+    // ── Datos ────────────────────────────────────────────────────
 
+    function applyData(data) {
+        if (!data.success) {
+            setStatus('Error: ' + data.message, 'error');
+            return;
+        }
         _state.landmarks = data.landmarks || [];
         _state.imgW      = data.image_width  || 640;
         _state.imgH      = data.image_height || 480;
@@ -233,6 +279,8 @@ const App = (() => {
         renderAll();
     }
 
+    // ── WebSocket ────────────────────────────────────────────────
+
     function onWsData(data) {
         if (!data.success) return;
         const proj = data.projection || {};
@@ -242,7 +290,11 @@ const App = (() => {
             _state.simplices = geo.delaunay.simplices;
         if (geo.voronoi)
             _state.voronoi = geo.voronoi;
-        Renderer.drawProjected(cRot, _state.projected, _state.simplices);
+
+        // Solo re-dibujar panel 04 (rapido, sin re-procesar imagen)
+        Renderer.drawProjected(cRot, _state.projected,
+                               _state.simplices,
+                               _state.alpha, _state.beta);
     }
 
     function onWsStatus(msg, ok) {
@@ -250,6 +302,8 @@ const App = (() => {
         el.textContent = ok ? 'OK' : 'OFF';
         el.style.color = ok ? 'var(--green)' : '#ff4444';
     }
+
+    // ── Sliders ──────────────────────────────────────────────────
 
     function onSliderRotate() {
         const aDeg = +document.getElementById('sl-alpha').value;
@@ -265,49 +319,80 @@ const App = (() => {
         const alpha = aDeg * Math.PI / 180;
         const beta  = bDeg * Math.PI / 180;
 
+        _state.alpha = alpha;
+        _state.beta  = beta;
+        _state.zoom  = zoom;
+
         OrbitControls.setState(alpha, beta, zoom);
         WsClient.send({ alpha, beta, zoom, offset_x: 0, offset_y: 0, D });
+
+        // Redibujar ejes aunque no haya datos aun
+        Renderer.drawProjected(cRot, _state.projected,
+                               _state.simplices, alpha, beta);
     }
 
     function syncSliders(st) {
         const aDeg = Math.round(st.alpha * 180 / Math.PI);
         const bDeg = Math.round(st.beta  * 180 / Math.PI);
-        document.getElementById('sl-alpha').value       = aDeg;
-        document.getElementById('sl-beta').value        = bDeg;
-        document.getElementById('sl-zoom').value        = Math.round(st.zoom * 100);
+        document.getElementById('sl-alpha').value        = aDeg;
+        document.getElementById('sl-beta').value         = bDeg;
+        document.getElementById('sl-zoom').value         = Math.round(st.zoom * 100);
         document.getElementById('lbl-alpha').textContent = aDeg + '°';
         document.getElementById('lbl-beta').textContent  = bDeg + '°';
         document.getElementById('lbl-zoom').textContent  = st.zoom.toFixed(1) + 'x';
     }
 
     function resetRotation() {
+        _state.alpha = 0;
+        _state.beta  = 0;
+        _state.zoom  = 1;
         OrbitControls.reset();
-        ['sl-alpha','sl-beta'].forEach(id =>
-            document.getElementById(id).value = 0);
-        document.getElementById('sl-zoom').value = 100;
+        document.getElementById('sl-alpha').value = 0;
+        document.getElementById('sl-beta').value  = 0;
+        document.getElementById('sl-zoom').value  = 100;
         document.getElementById('lbl-alpha').textContent = '0°';
         document.getElementById('lbl-beta').textContent  = '0°';
         document.getElementById('lbl-zoom').textContent  = '1.0x';
         const D = +document.getElementById('sl-D').value;
-        WsClient.send({ alpha: 0, beta: 0, zoom: 1, offset_x: 0, offset_y: 0, D });
+        WsClient.send({ alpha:0, beta:0, zoom:1,
+                        offset_x:0, offset_y:0, D });
+        Renderer.drawProjected(cRot, _state.projected,
+                               _state.simplices, 0, 0);
     }
+
+    // ── Render ───────────────────────────────────────────────────
 
     function renderAll() {
         const showVoronoi = document.getElementById('chk-voronoi').checked;
+        const showPoints  = document.getElementById('chk-points').checked;
 
         Renderer.drawRealImage(cFoto, _state.imageB64);
 
-        Renderer.drawLandmarksOnImage(cFotoPts, _state.imageB64,
-            _state.landmarks, _state.imgW, _state.imgH);
+        Renderer.drawLandmarksOnImage(
+            cFotoPts, _state.imageB64, _state.landmarks,
+            _state.imgW, _state.imgH, showPoints);
 
-        Renderer.drawLandmarks(cPts, _state.landmarks,
-            _state.imgW, _state.imgH);
+        Renderer.drawLandmarks(
+            cPts, _state.landmarks,
+            _state.imgW, _state.imgH, showPoints);
 
-        Renderer.drawDelaunay(cTri, _state.points2d, _state.simplices,
-            _state.imgW, _state.imgH, _state.voronoi, showVoronoi);
+        Renderer.drawDelaunayOnImage(
+            cFotoTri, _state.imageB64,
+            _state.points2d, _state.simplices,
+            _state.imgW, _state.imgH,
+            _state.voronoi, showVoronoi, showPoints);
 
-        Renderer.drawProjected(cRot, _state.projected, _state.simplices);
+        Renderer.drawDelaunay(
+            cTri, _state.points2d, _state.simplices,
+            _state.imgW, _state.imgH,
+            _state.voronoi, showVoronoi, showPoints);
+
+        Renderer.drawProjected(
+            cRot, _state.projected, _state.simplices,
+            _state.alpha, _state.beta);
     }
+
+    // ── Sesiones ─────────────────────────────────────────────────
 
     async function saveSession() {
         const name = prompt('Nombre de la sesion (vacio = automatico):');
@@ -328,14 +413,17 @@ const App = (() => {
             const el = document.getElementById('sessions-list');
             el.innerHTML = '';
             if (!r.sessions || r.sessions.length === 0) {
-                el.innerHTML = '<div style="padding:6px 8px;font-size:11px;color:var(--text3)">Sin sesiones</div>';
+                el.innerHTML =
+                    '<div style="padding:6px 8px;font-size:11px;' +
+                    'color:var(--text3)">Sin sesiones</div>';
                 return;
             }
             r.sessions.forEach(s => {
                 const div = document.createElement('div');
                 div.className = 'session-item';
-                div.innerHTML = `<span>${s.name}</span><span>${s.size_kb}KB</span>`;
-                div.onclick   = () => loadSession(s.name);
+                div.innerHTML =
+                    `<span>${s.name}</span><span>${s.size_kb}KB</span>`;
+                div.onclick = () => loadSession(s.name);
                 el.appendChild(div);
             });
         } catch (e) { console.error(e); }
@@ -351,6 +439,8 @@ const App = (() => {
         } catch (e) { setStatus('Error: ' + e.message, 'error'); }
     }
 
+    // ── Utilidades ───────────────────────────────────────────────
+
     function setStatus(msg, type) {
         const el = document.getElementById('status');
         el.textContent = msg;
@@ -361,18 +451,21 @@ const App = (() => {
         const lm  = (data.landmarks || []).length;
         const tri = ((data.geometry || {}).delaunay || {}).num_triangles || 0;
         const vor = ((data.geometry || {}).voronoi  || {}).num_regions   || 0;
-        document.getElementById('stat-lm').textContent      = lm;
-        document.getElementById('stat-tri').textContent     = tri;
-        document.getElementById('stat-vor').textContent     = vor;
-        document.getElementById('badge-foto').textContent   = data.image_width + 'x' + data.image_height;
+        document.getElementById('stat-lm').textContent       = lm;
+        document.getElementById('stat-tri').textContent      = tri;
+        document.getElementById('stat-vor').textContent      = vor;
+        document.getElementById('badge-foto').textContent    =
+            data.image_width + 'x' + data.image_height;
         document.getElementById('badge-foto-pts').textContent = lm + ' pts';
-        document.getElementById('badge-pts').textContent    = lm + ' pts';
-        document.getElementById('badge-tri').textContent    = tri + ' tri';
-        document.getElementById('badge-rot').textContent    = '3D';
+        document.getElementById('badge-pts').textContent     = lm + ' pts';
+        document.getElementById('badge-foto-tri').textContent = tri + ' tri';
+        document.getElementById('badge-tri').textContent     = tri + ' tri';
+        document.getElementById('badge-rot').textContent     = '3D';
     }
 
     function hidePlaceholders() {
-        ['ph-foto','ph-foto-pts','ph-pts','ph-tri','ph-rot'].forEach(id => {
+        ['ph-foto','ph-foto-pts','ph-pts',
+         'ph-foto-tri','ph-tri','ph-rot'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
