@@ -3,6 +3,7 @@ import json
 import os
 import numpy as np
 from datetime import datetime
+from typing import Optional
 
 
 class StorageService:
@@ -22,7 +23,7 @@ class StorageService:
     # ------------------------------------------------------------------
 
     def save_session(self, session_data: dict,
-                     session_name: str = None) -> dict:
+                     session_name: Optional[str] = None) -> dict: 
         """
         Guarda una sesion completa en disco como JSON.
 
