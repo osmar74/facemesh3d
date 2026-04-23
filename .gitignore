@@ -3,3 +3,4 @@ __pycache__/
 *.pyc 
 .env 
 storage/sessions/*.json 
+face_landmarker.task 

@@ -1,0 +1,208 @@
+/* static/css/style.css */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --bg:       #0a0a0a;
+    --bg2:      #111111;
+    --bg3:      #1a1a1a;
+    --border:   #1f1f1f;
+    --green:    #00ff41;
+    --green2:   #00cc33;
+    --green3:   #004d14;
+    --text:     #00ff41;
+    --text2:    #00aa2a;
+    --text3:    #005510;
+    --panel-w:  260px;
+    --gap:      10px;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+}
+
+/* ── PANEL IZQUIERDO ── */
+#sidebar {
+    width: var(--panel-w);
+    min-width: var(--panel-w);
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 10px;
+    overflow-y: auto;
+}
+
+#sidebar h1 {
+    font-size: 14px;
+    color: var(--green);
+    border-bottom: 1px solid var(--green3);
+    padding-bottom: 8px;
+    letter-spacing: 2px;
+}
+
+.section-title {
+    font-size: 11px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
+}
+
+/* Botones */
+.btn {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--green3);
+    color: var(--green);
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+    letter-spacing: 1px;
+}
+.btn:hover  { background: var(--green3); border-color: var(--green2); }
+.btn:active { background: #003d10; }
+.btn.primary { border-color: var(--green); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* Input file oculto */
+#file-input { display: none; }
+
+/* Sliders */
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+.slider-row label { width: 60px; font-size: 11px; color: var(--text2); }
+.slider-row input[type=range] {
+    flex: 1;
+    accent-color: var(--green);
+    height: 3px;
+}
+.slider-row span { width: 36px; text-align: right; font-size: 11px; color: var(--green); }
+
+/* Status */
+#status {
+    font-size: 11px;
+    color: var(--text2);
+    border: 1px solid var(--border);
+    padding: 6px 8px;
+    background: var(--bg);
+    min-height: 38px;
+    line-height: 1.5;
+}
+#status.ok    { color: var(--green);  border-color: var(--green3); }
+#status.error { color: #ff4444;       border-color: #440000; }
+#status.busy  { color: #ffaa00;       border-color: #442200; }
+
+/* Stats */
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    padding: 2px 0;
+    border-bottom: 1px solid var(--border);
+}
+.stat-row span:first-child { color: var(--text2); }
+.stat-row span:last-child  { color: var(--green); }
+
+/* Sessions list */
+#sessions-list {
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+}
+.session-item {
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+}
+.session-item:hover { background: var(--green3); color: var(--green); }
+
+
+/* ── AREA DE PANELES — 6 paneles 3x2 ── */
+#main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: var(--gap);
+    padding: var(--gap);
+    overflow: hidden;
+}
+
+.panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.panel-header {
+    padding: 5px 10px;
+    font-size: 11px;
+    color: var(--text2);
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.panel-header .badge {
+    font-size: 10px;
+    color: var(--green);
+    background: var(--green3);
+    padding: 1px 6px;
+    border-radius: 2px;
+}
+
+.panel canvas {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: #000;
+}
+
+#panel-rotate canvas { cursor: grab; }
+#panel-rotate canvas:active { cursor: grabbing; }
+
+.panel-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text3);
+    font-size: 12px;
+    pointer-events: none;
+    letter-spacing: 1px;
+}
+
+
+
+/* Scrollbar oscuro */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--green3); border-radius: 2px; }
