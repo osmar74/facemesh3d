@@ -23,7 +23,8 @@ class MathService:
                       beta: float = 0.0,
                       zoom: float = 1.0,
                       offset_x: float = 0.0,
-                      offset_y: float = 0.0) -> dict:
+                      offset_y: float = 0.0,
+                      landmark_levels: int = 1) -> dict:
         """
         Pipeline completo sobre una imagen BGR.
 
@@ -33,6 +34,8 @@ class MathService:
             beta:  angulo rotacion vertical   (radianes)
             zoom:  factor de escala
             offset_x, offset_y: traslacion del canvas
+            landmark_levels:  niveles de subdivision de landmarks
+                              0=68pts, 1=~250pts, 2=~700pts, 3=~2000pts
 
         Returns:
             {
@@ -67,9 +70,14 @@ class MathService:
                 "projection": {}
             }
 
-        landmarks = detection["landmarks"]
+     
         w = detection["image_width"]
         h = detection["image_height"]
+        
+                # Enriquecer landmarks con puntos interpolados
+        landmarks = self.detector.enrich_landmarks(
+            detection["landmarks"], w, h, levels=landmark_levels
+        )
 
         # 2. Calcular geometria (Delaunay + Voronoi)
         geo_data = self.geometry.compute_all(landmarks, w, h)
@@ -83,7 +91,7 @@ class MathService:
 
         return {
             "success": True,
-            "message": detection["message"],
+            "message": f"Detectados {len(detection['landmarks'])} landmarks base → {len(landmarks)} enriquecidos",
             "landmarks": landmarks,
             "image_width": w,
             "image_height": h,
@@ -96,7 +104,8 @@ class MathService:
                       beta: float = 0.0,
                       zoom: float = 1.0,
                       offset_x: float = 0.0,
-                      offset_y: float = 0.0) -> dict:
+                      offset_y: float = 0.0,
+                      landmark_levels: int = 1) -> dict:
         """
         Pipeline completo desde bytes de imagen (upload HTTP).
         """
@@ -107,7 +116,7 @@ class MathService:
             return {"success": False, "message": "No se pudo decodificar",
                     "landmarks": [], "geometry": {}, "projection": {}}
         return self.process_image(image, alpha, beta, zoom,
-                                  offset_x, offset_y)
+                                  offset_x, offset_y, landmark_levels)
 
     def reproject(self, landmarks: list,
                   image_width: int,

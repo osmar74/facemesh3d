@@ -16,6 +16,9 @@ class StorageService:
     SESSIONS_DIR = "storage/sessions"
 
     def __init__(self):
+        # Ruta absoluta relativa a este archivo — funciona desde cualquier directorio
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.SESSIONS_DIR = os.path.join(base, "storage", "sessions")
         os.makedirs(self.SESSIONS_DIR, exist_ok=True)
 
     # ------------------------------------------------------------------

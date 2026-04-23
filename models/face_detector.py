@@ -106,6 +106,59 @@ class FaceDetector:
             return np.array([])
         return np.array([[lm["x"], lm["y"], lm["z"]]
                          for lm in landmarks])
+        
+    def enrich_landmarks(self, landmarks: list,
+                         image_width: int,
+                         image_height: int,
+                         levels: int = 1) -> list:
+        """
+        Enriquece los landmarks agregando puntos interpolados
+        entre pares de landmarks existentes.
+
+        Args:
+            landmarks:    lista original de {"x","y","z"}
+            image_width:  ancho imagen
+            image_height: alto imagen
+            levels:       niveles de subdivision (1=~3x, 2=~5x, 3=~9x puntos)
+
+        Returns:
+            lista ampliada de landmarks con el mismo formato
+        """
+        import numpy as np
+        from scipy.spatial import Delaunay
+
+        if not landmarks or levels == 0:
+            return landmarks
+
+        pts = np.array([[lm["x"], lm["y"], lm["z"]]
+                        for lm in landmarks], dtype=np.float64)
+
+        for _ in range(levels):
+            pts2d = pts[:, :2]
+            try:
+                tri = Delaunay(pts2d)
+            except Exception:
+                break
+
+            new_pts = list(pts)
+            seen = set()
+
+            for simplex in tri.simplices:
+                for i in range(3):
+                    a = simplex[i]
+                    b = simplex[(i + 1) % 3]
+                    key = (min(a, b), max(a, b))
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    mid = (pts[a] + pts[b]) / 2.0
+                    new_pts.append(mid)
+
+            pts = np.array(new_pts, dtype=np.float64)
+
+        return [{"x": float(p[0]),
+                 "y": float(p[1]),
+                 "z": float(p[2])} for p in pts]
 
     def close(self):
         """Libera recursos."""
