@@ -162,11 +162,15 @@ async def websocket_stream(websocket: WebSocket):
                 )
                 continue
 
-            alpha = float(msg.get("alpha", 0.0))
-            beta = float(msg.get("beta", 0.0))
-            zoom = float(msg.get("zoom", 1.0))
+            alpha    = float(msg.get("alpha",    0.0))
+            beta     = float(msg.get("beta",     0.0))
+            zoom     = float(msg.get("zoom",     1.0))
             offset_x = float(msg.get("offset_x", 0.0))
             offset_y = float(msg.get("offset_y", 0.0))
+            D        = float(msg.get("D",        500.0))
+
+            # Actualizar distancia focal antes de re-proyectar
+            controller.math.projection.D = D
 
             result = controller.reproject(
                 alpha=alpha, beta=beta,

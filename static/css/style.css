@@ -136,11 +136,12 @@ body {
 }
 .session-item:hover { background: var(--green3); color: var(--green); }
 
-/* ── AREA DE PANELES ── */
+
+/* ── AREA DE PANELES — 5 paneles ── */
 #main {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     gap: var(--gap);
     padding: var(--gap);
@@ -155,6 +156,10 @@ body {
     overflow: hidden;
     position: relative;
 }
+
+/* Panel triangulacion ocupa 2 columnas en fila inferior */
+#panel-tri    { grid-column: 1 / 3; }
+#panel-rotate { grid-column: 3; }
 
 .panel-header {
     padding: 5px 10px;
@@ -184,11 +189,9 @@ body {
     background: #000;
 }
 
-/* Panel 4 — rotacion: cursor especial */
 #panel-rotate canvas { cursor: grab; }
 #panel-rotate canvas:active { cursor: grabbing; }
 
-/* Overlay mensaje "Sube una imagen" */
 .panel-placeholder {
     position: absolute;
     inset: 0;
@@ -200,6 +203,8 @@ body {
     pointer-events: none;
     letter-spacing: 1px;
 }
+
+
 
 /* Scrollbar oscuro */
 ::-webkit-scrollbar { width: 4px; }
