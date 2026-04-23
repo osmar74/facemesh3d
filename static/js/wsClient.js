@@ -63,13 +63,14 @@ const WsClient = (() => {
 
     // ── Upload de imagen via fetch ────────────────────────────────
 
-    async function uploadImage(file, onProgress) {
+    async function uploadImage(file, levels) {
         const formData = new FormData();
         formData.append('file', file);
 
-        if (onProgress) onProgress('Subiendo imagen...');
+        const lvl = (levels !== undefined) ? levels : 1;
+        const url = `/upload?levels=${lvl}`;
 
-        const resp = await fetch('/upload', {
+        const resp = await fetch(url, {
             method: 'POST',
             body: formData
         });

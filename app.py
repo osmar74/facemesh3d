@@ -60,7 +60,8 @@ async def index(request: Request):
 
 
 @app.post("/upload")
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(file: UploadFile = File(...),
+                       levels: int = 1):
     """
     Recibe imagen subida por el usuario.
     Detecta landmarks, calcula Delaunay/Voronoi y proyeccion 3D.
@@ -69,7 +70,8 @@ async def upload_image(file: UploadFile = File(...)):
         JSON con landmarks, geometria y proyeccion inicial.
     """
     image_bytes = await file.read()
-    result = controller.process_upload(image_bytes)
+    result = controller.process_upload(image_bytes,
+                                       landmark_levels=levels)
 
     if not result["success"]:
         return JSONResponse(

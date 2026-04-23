@@ -12,6 +12,7 @@
 
     <h1>FACEMESH 3D</h1>
 
+    <!-- Entrada -->
     <div>
         <div class="section-title">Entrada</div>
         <input type="file" id="file-input" accept="image/*">
@@ -25,6 +26,7 @@
         </button>
     </div>
 
+    <!-- Rotacion -->
     <div>
         <div class="section-title">Rotacion 3D</div>
         <div class="slider-row">
@@ -51,6 +53,7 @@
         </button>
     </div>
 
+    <!-- Proyeccion focal -->
     <div>
         <div class="section-title">Proyeccion focal</div>
         <div class="slider-row">
@@ -61,6 +64,21 @@
         </div>
     </div>
 
+    <!-- Densidad landmarks -->
+    <div>
+        <div class="section-title">Densidad landmarks</div>
+        <div class="slider-row">
+            <label>Nivel</label>
+            <input type="range" id="sl-levels" min="0" max="3"
+                   value="1" step="1" oninput="App.onLevelsChange()">
+            <span id="lbl-levels">~250 pts</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">
+            0=68 · 1=~250 · 2=~700 · 3=~2000
+        </div>
+    </div>
+
+    <!-- Visualizacion -->
     <div>
         <div class="section-title">Visualizacion</div>
         <label style="display:flex;align-items:center;gap:6px;
@@ -78,22 +96,28 @@
         </label>
     </div>
 
+    <!-- Estadisticas -->
     <div>
         <div class="section-title">Estadisticas</div>
         <div class="stat-row">
-            <span>Landmarks</span><span id="stat-lm">—</span>
+            <span>Landmarks</span>
+            <span id="stat-lm">—</span>
         </div>
         <div class="stat-row">
-            <span>Triangulos</span><span id="stat-tri">—</span>
+            <span>Triangulos</span>
+            <span id="stat-tri">—</span>
         </div>
         <div class="stat-row">
-            <span>Voronoi reg.</span><span id="stat-vor">—</span>
+            <span>Voronoi reg.</span>
+            <span id="stat-vor">—</span>
         </div>
         <div class="stat-row">
-            <span>WebSocket</span><span id="stat-ws">—</span>
+            <span>WebSocket</span>
+            <span id="stat-ws">—</span>
         </div>
     </div>
 
+    <!-- Sesiones -->
     <div>
         <div class="section-title">Sesiones</div>
         <button class="btn" onclick="App.saveSession()">
@@ -106,6 +130,7 @@
         <div id="sessions-list" style="margin-top:6px"></div>
     </div>
 
+    <!-- Estado -->
     <div>
         <div class="section-title">Estado</div>
         <div id="status">Esperando imagen...</div>
@@ -130,7 +155,7 @@
         <div class="panel-placeholder" id="ph-foto">Sube una imagen</div>
     </div>
 
-    <!-- 02a: foto + landmarks -->
+    <!-- 02a: foto + landmarks superpuestos -->
     <div class="panel" id="panel-foto-pts">
         <div class="panel-header">
             02a — Foto + landmarks
@@ -190,13 +215,21 @@
 <script>
 const App = (() => {
 
+    // Estado global
     let _state = {
-        landmarks: [], imgW: 640, imgH: 480,
-        points2d:  [], simplices: [], projected: [],
-        imageB64:  '', voronoi: null,
-        alpha: 0, beta: 0, zoom: 1
+        landmarks: [],
+        imgW: 640, imgH: 480,
+        points2d:  [],
+        simplices: [],
+        projected: [],
+        imageB64:  '',
+        voronoi:   null,
+        alpha: 0,
+        beta:  0,
+        zoom:  1
     };
 
+    // Referencias canvas
     const cFoto    = document.getElementById('canvas-foto');
     const cFotoPts = document.getElementById('canvas-foto-pts');
     const cPts     = document.getElementById('canvas-pts');
@@ -204,7 +237,11 @@ const App = (() => {
     const cTri     = document.getElementById('canvas-tri');
     const cRot     = document.getElementById('canvas-rot');
 
+    // ── Inicializacion ───────────────────────────────────────────
+
     function init() {
+
+        // Orbit controls en canvas de rotacion
         OrbitControls.init(cRot, (st) => {
             _state.alpha = st.alpha;
             _state.beta  = st.beta;
@@ -214,17 +251,21 @@ const App = (() => {
             WsClient.send({ ...st, D });
         });
 
+        // WebSocket
         WsClient.connect(onWsData, onWsStatus);
 
+        // Input de archivo
         document.getElementById('file-input')
             .addEventListener('change', onFileSelected);
 
+        // Resize
         window.addEventListener('resize', () => renderAll());
+
         setStatus('Servidor conectado. Sube una imagen.', 'ok');
         loadSessionList();
     }
 
-    // ── Entrada ─────────────────────────────────────────────────
+    // ── Entrada de datos ─────────────────────────────────────────
 
     async function onFileSelected(evt) {
         const file = evt.target.files[0];
@@ -233,7 +274,8 @@ const App = (() => {
         setStatus('Procesando imagen...', 'busy');
         hidePlaceholders();
         try {
-            const data = await WsClient.uploadImage(file);
+            const levels = +document.getElementById('sl-levels').value;
+            const data   = await WsClient.uploadImage(file, levels);
             applyData(data);
             setStatus('OK — ' + data.message, 'ok');
         } catch (e) {
@@ -245,8 +287,10 @@ const App = (() => {
         setStatus('Capturando webcam...', 'busy');
         hidePlaceholders();
         try {
-            const resp = await fetch('/webcam', { method: 'POST' });
-            const data = await resp.json();
+            const levels = +document.getElementById('sl-levels').value;
+            const resp   = await fetch(`/webcam?levels=${levels}`,
+                                       { method: 'POST' });
+            const data   = await resp.json();
             if (!data.success) throw new Error(data.message);
             applyData(data);
             setStatus('OK — ' + data.message, 'ok');
@@ -255,25 +299,26 @@ const App = (() => {
         }
     }
 
-    // ── Datos ────────────────────────────────────────────────────
+    // ── Aplicar datos del servidor ───────────────────────────────
 
     function applyData(data) {
         if (!data.success) {
             setStatus('Error: ' + data.message, 'error');
             return;
         }
-        _state.landmarks = data.landmarks || [];
+
+        _state.landmarks = data.landmarks  || [];
         _state.imgW      = data.image_width  || 640;
         _state.imgH      = data.image_height || 480;
-        _state.imageB64  = data.image_b64 || '';
+        _state.imageB64  = data.image_b64  || '';
 
-        const geo = data.geometry || {};
-        _state.points2d  = geo.points_2d || [];
-        _state.simplices = (geo.delaunay || {}).simplices || [];
-        _state.voronoi   = geo.voronoi || null;
+        const geo        = data.geometry   || {};
+        _state.points2d  = geo.points_2d   || [];
+        _state.simplices = (geo.delaunay   || {}).simplices || [];
+        _state.voronoi   = geo.voronoi     || null;
 
-        const proj = data.projection || {};
-        _state.projected = proj.projected || [];
+        const proj       = data.projection || {};
+        _state.projected = proj.projected  || [];
 
         updateStats(data);
         renderAll();
@@ -283,15 +328,17 @@ const App = (() => {
 
     function onWsData(data) {
         if (!data.success) return;
+
         const proj = data.projection || {};
         _state.projected = proj.projected || [];
+
         const geo = data.geometry || {};
         if (geo.delaunay && geo.delaunay.simplices)
             _state.simplices = geo.delaunay.simplices;
         if (geo.voronoi)
             _state.voronoi = geo.voronoi;
 
-        // Solo re-dibujar panel 04 (rapido, sin re-procesar imagen)
+        // Solo re-dibujar panel 04 para mantener fluidez
         Renderer.drawProjected(cRot, _state.projected,
                                _state.simplices,
                                _state.alpha, _state.beta);
@@ -326,9 +373,15 @@ const App = (() => {
         OrbitControls.setState(alpha, beta, zoom);
         WsClient.send({ alpha, beta, zoom, offset_x: 0, offset_y: 0, D });
 
-        // Redibujar ejes aunque no haya datos aun
+        // Redibujar ejes aunque no haya datos
         Renderer.drawProjected(cRot, _state.projected,
                                _state.simplices, alpha, beta);
+    }
+
+    function onLevelsChange() {
+        const lvl    = +document.getElementById('sl-levels').value;
+        const labels = ['68 pts', '~250 pts', '~700 pts', '~2000 pts'];
+        document.getElementById('lbl-levels').textContent = labels[lvl];
     }
 
     function syncSliders(st) {
@@ -347,34 +400,37 @@ const App = (() => {
         _state.beta  = 0;
         _state.zoom  = 1;
         OrbitControls.reset();
-        document.getElementById('sl-alpha').value = 0;
-        document.getElementById('sl-beta').value  = 0;
-        document.getElementById('sl-zoom').value  = 100;
+        document.getElementById('sl-alpha').value        = 0;
+        document.getElementById('sl-beta').value         = 0;
+        document.getElementById('sl-zoom').value         = 100;
         document.getElementById('lbl-alpha').textContent = '0°';
         document.getElementById('lbl-beta').textContent  = '0°';
         document.getElementById('lbl-zoom').textContent  = '1.0x';
         const D = +document.getElementById('sl-D').value;
-        WsClient.send({ alpha:0, beta:0, zoom:1,
-                        offset_x:0, offset_y:0, D });
+        WsClient.send({ alpha: 0, beta: 0, zoom: 1,
+                        offset_x: 0, offset_y: 0, D });
         Renderer.drawProjected(cRot, _state.projected,
                                _state.simplices, 0, 0);
     }
 
-    // ── Render ───────────────────────────────────────────────────
+    // ── Renderizado completo ─────────────────────────────────────
 
     function renderAll() {
         const showVoronoi = document.getElementById('chk-voronoi').checked;
         const showPoints  = document.getElementById('chk-points').checked;
 
-        Renderer.drawRealImage(cFoto, _state.imageB64);
+        Renderer.drawRealImage(
+            cFoto, _state.imageB64);
 
         Renderer.drawLandmarksOnImage(
-            cFotoPts, _state.imageB64, _state.landmarks,
-            _state.imgW, _state.imgH, showPoints);
+            cFotoPts, _state.imageB64,
+            _state.landmarks, _state.imgW, _state.imgH,
+            showPoints);
 
         Renderer.drawLandmarks(
             cPts, _state.landmarks,
-            _state.imgW, _state.imgH, showPoints);
+            _state.imgW, _state.imgH,
+            showPoints);
 
         Renderer.drawDelaunayOnImage(
             cFotoTri, _state.imageB64,
@@ -400,11 +456,15 @@ const App = (() => {
         setStatus('Guardando...', 'busy');
         try {
             const r = await WsClient.saveSesion(name || null);
-            setStatus(r.success ? 'Guardada: ' + r.session_name
-                                : 'Error: ' + r.message,
-                      r.success ? 'ok' : 'error');
+            setStatus(
+                r.success ? 'Guardada: ' + r.session_name
+                          : 'Error: '   + r.message,
+                r.success ? 'ok' : 'error'
+            );
             loadSessionList();
-        } catch (e) { setStatus('Error: ' + e.message, 'error'); }
+        } catch (e) {
+            setStatus('Error: ' + e.message, 'error');
+        }
     }
 
     async function loadSessionList() {
@@ -412,21 +472,29 @@ const App = (() => {
             const r  = await WsClient.listSesiones();
             const el = document.getElementById('sessions-list');
             el.innerHTML = '';
+
             if (!r.sessions || r.sessions.length === 0) {
                 el.innerHTML =
                     '<div style="padding:6px 8px;font-size:11px;' +
-                    'color:var(--text3)">Sin sesiones</div>';
+                    'color:var(--text3)">Sin sesiones guardadas</div>';
                 return;
             }
+
             r.sessions.forEach(s => {
-                const div = document.createElement('div');
-                div.className = 'session-item';
-                div.innerHTML =
-                    `<span>${s.name}</span><span>${s.size_kb}KB</span>`;
-                div.onclick = () => loadSession(s.name);
+                const div       = document.createElement('div');
+                div.className   = 'session-item';
+                div.title       = s.saved_at || '';
+                div.innerHTML   =
+                    `<span>${s.name}</span>` +
+                    `<span>${s.size_kb} KB</span>`;
+                div.onclick     = () => loadSession(s.name);
                 el.appendChild(div);
             });
-        } catch (e) { console.error(e); }
+
+        } catch (e) {
+            console.error('Error listando sesiones:', e);
+            setStatus('Error cargando lista: ' + e.message, 'error');
+        }
     }
 
     async function loadSession(name) {
@@ -436,47 +504,58 @@ const App = (() => {
             const data = await WsClient.loadSesion(name);
             applyData(data);
             setStatus('Sesion cargada: ' + name, 'ok');
-        } catch (e) { setStatus('Error: ' + e.message, 'error'); }
+        } catch (e) {
+            setStatus('Error: ' + e.message, 'error');
+        }
     }
 
     // ── Utilidades ───────────────────────────────────────────────
 
     function setStatus(msg, type) {
-        const el = document.getElementById('status');
+        const el     = document.getElementById('status');
         el.textContent = msg;
         el.className   = type || '';
     }
 
     function updateStats(data) {
         const lm  = (data.landmarks || []).length;
-        const tri = ((data.geometry || {}).delaunay || {}).num_triangles || 0;
-        const vor = ((data.geometry || {}).voronoi  || {}).num_regions   || 0;
-        document.getElementById('stat-lm').textContent       = lm;
-        document.getElementById('stat-tri').textContent      = tri;
-        document.getElementById('stat-vor').textContent      = vor;
-        document.getElementById('badge-foto').textContent    =
-            data.image_width + 'x' + data.image_height;
+        const tri = ((data.geometry  || {}).delaunay || {}).num_triangles || 0;
+        const vor = ((data.geometry  || {}).voronoi  || {}).num_regions   || 0;
+
+        document.getElementById('stat-lm').textContent        = lm;
+        document.getElementById('stat-tri').textContent       = tri;
+        document.getElementById('stat-vor').textContent       = vor;
+        document.getElementById('badge-foto').textContent     =
+            (data.image_width || 0) + 'x' + (data.image_height || 0);
         document.getElementById('badge-foto-pts').textContent = lm + ' pts';
-        document.getElementById('badge-pts').textContent     = lm + ' pts';
+        document.getElementById('badge-pts').textContent      = lm + ' pts';
         document.getElementById('badge-foto-tri').textContent = tri + ' tri';
-        document.getElementById('badge-tri').textContent     = tri + ' tri';
-        document.getElementById('badge-rot').textContent     = '3D';
+        document.getElementById('badge-tri').textContent      = tri + ' tri';
+        document.getElementById('badge-rot').textContent      = '3D';
     }
 
     function hidePlaceholders() {
-        ['ph-foto','ph-foto-pts','ph-pts',
-         'ph-foto-tri','ph-tri','ph-rot'].forEach(id => {
+        ['ph-foto', 'ph-foto-pts', 'ph-pts',
+         'ph-foto-tri', 'ph-tri', 'ph-rot'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
     }
 
+    // Arrancar cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', init);
 
+    // API publica del modulo App
     return {
-        captureWebcam, onSliderRotate, resetRotation,
-        saveSession, loadSessionList, renderAll
+        captureWebcam,
+        onSliderRotate,
+        onLevelsChange,
+        resetRotation,
+        saveSession,
+        loadSessionList,
+        renderAll
     };
+
 })();
 </script>
 </body>

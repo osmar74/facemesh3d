@@ -31,7 +31,8 @@ class FaceController:
     def process_upload(self, image_bytes: bytes,
                        alpha: float = 0.0,
                        beta: float = 0.0,
-                       zoom: float = 1.0) -> dict:
+                       zoom: float = 1.0,
+                       landmark_levels: int = 1) -> dict:
         """
         Recibe bytes de imagen subida por el usuario.
         Detecta landmarks, calcula geometria y proyeccion.
@@ -52,7 +53,8 @@ class FaceController:
 
         # Pipeline matematico completo
         result = self.math.process_image(
-            frame, alpha=alpha, beta=beta, zoom=zoom
+            frame, alpha=alpha, beta=beta, zoom=zoom,
+            landmark_levels=landmark_levels
         )
 
         if result["success"]:
